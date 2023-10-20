@@ -1,7 +1,7 @@
 # ItemGuard
 
 
-## Gestion des stocks :
+## Gestion des stocks :
 
 Base de données comprenant plusieurs produits différents. Gestion quantité / entrée ou sortie de produit (logs) / gestion de la zone de rangement (ex: 20 objets par ligne, donc gestion du déplacement de produit) 
 

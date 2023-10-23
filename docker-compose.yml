@@ -1,0 +1,41 @@
+version: '3.4'
+
+networks:
+  default:
+    driver: bridge
+
+services:
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      ADMINER_DESIGN: 'hydra'
+      ADMINER_DEFAULT_SERVER: 'postgresql'
+    ports:
+      - 8080:8080
+
+
+  db:
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    volumes:
+      - ./initialization-scripts:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+
+
+  api:
+    build: .
+    networks:
+      - default
+    volumes:
+      - ./app/:/app
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "5000", "--reload"]
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env

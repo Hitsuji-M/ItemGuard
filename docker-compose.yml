@@ -5,6 +5,19 @@ networks:
     driver: bridge
 
 services:
+  db:
+    image: postgres
+    restart: always
+    volumes:
+      - ./initialization-scripts:/docker-entrypoint-initdb.d/
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    networks:
+      - default
+
+
   adminer:
     image: adminer
     restart: always
@@ -13,19 +26,8 @@ services:
       ADMINER_DEFAULT_SERVER: 'postgresql'
     ports:
       - 8080:8080
-
-
-  db:
-    image: postgres
-    restart: always
-    env_file:
-      - .env
-    volumes:
-      - ./initialization-scripts:/docker-entrypoint-initdb.d/
-    ports:
-      - "5432:5432"
-    networks:
-      - default
+    depends_on:
+      - db
 
 
   api:
@@ -39,3 +41,5 @@ services:
       - "5000:5000"
     env_file:
       - .env
+    depends_on:
+      - adminer

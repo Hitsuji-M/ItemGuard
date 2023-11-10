@@ -1,9 +1,8 @@
 from fastapi import FastAPI, Depends
 from database.setup_db import engine, SessionLocal, BaseSQL
-from models import Log
+from database.models import Log
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
-
 
 app = FastAPI(
     title="ItemGuard",
@@ -25,13 +24,9 @@ def root():
     return "ItemGuard on"
 
 
-@app.get("/log/last")
+@app.get("/db/tables")
 def last_log():
-    name = []
-    for table in Log.metadata.tables.values():
-        name.append(table.name)
-    return name
-
+    return BaseSQL.classes.keys()
 
 @app.get("/log/view")
 def all_logs(db: Session = Depends(get_db)):

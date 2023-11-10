@@ -43,3 +43,17 @@ services:
       - .env
     depends_on:
       - adminer
+
+
+  front:
+      build:
+        context: front
+        dockerfile: Dockerfile
+      ports:
+        - "8501:8501"
+      volumes:
+        - ./front:/app
+      networks:
+        - default
+
+

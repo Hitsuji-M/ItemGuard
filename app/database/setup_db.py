@@ -16,4 +16,4 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=True, bind=engine)
 BaseSQL: DeclarativeMeta = automap_base()
-BaseSQL.prepare(autoload_with=engine)
+BaseSQL.prepare(schema="itemg", autoload_with=engine)

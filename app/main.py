@@ -1,8 +1,12 @@
-from fastapi import FastAPI, Depends
-from database.setup_db import engine, SessionLocal, BaseSQL
-from database.models import Log
+from fastapi import FastAPI, Depends, Header
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from typing import Optional
+
+from database.setup_db import engine, SessionLocal, BaseSQL
+from models import *
+
+from services import products_services, log_services
 
 app = FastAPI(
     title="ItemGuard",
@@ -23,12 +27,26 @@ def get_db():
 def root():
     return "ItemGuard on"
 
-
 @app.get("/db/tables")
-def last_log():
+def tables():
     return BaseSQL.classes.keys()
+
+
+###
+### /// Logs ///
+###
+
 
 @app.get("/log/view")
 def all_logs(db: Session = Depends(get_db)):
-    logs = db.query(Log).all()
-    return logs
+    return log_services.all_logs(db)
+
+
+###
+### /// Products ///
+###
+
+
+@app.post("/product/new")
+def create(product: ProductModel, db: Session = Depends(get_db)):
+    return products_services.create_product(db, product)

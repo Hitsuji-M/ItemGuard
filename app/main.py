@@ -37,9 +37,17 @@ def tables():
 ###
 
 
-@app.get("/log/view")
+@app.get("/logs")
 def all_logs(db: Session = Depends(get_db)):
-    return log_services.all_logs(db)
+    return log_services.get_logs(db)
+
+@app.get("/logs/{limit}")
+def all_logs(limit: int, db: Session = Depends(get_db)):
+    return log_services.get_logs_limited(db, limit)
+
+@app.delete("/log/{id}")
+def rm_log(id: int, db: Session = Depends(get_db)):
+    return log_services.delete_log_by_id(db, id)
 
 
 ###

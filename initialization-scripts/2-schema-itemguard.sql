@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS itemg.LogType (
 
 CREATE TABLE IF NOT EXISTS itemg.Log (
     idLog SERIAL,
-    idType INT,
+    idType INT NOT NULL,
     logDate TIMESTAMP,
     PRIMARY KEY(idLog),
     CONSTRAINT fk_type_log_id FOREIGN KEY(idType) REFERENCES itemg.LogType(idType)

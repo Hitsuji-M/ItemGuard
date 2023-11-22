@@ -1,9 +1,25 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from typing import List
+from datetime import datetime as dt
 
 from database.tables import *
 from models import *
+
+
+def logs_query(db: Session, limit: int = 0, desc: bool = True, before: dt = None) -> List[Log]:
+    query = db.query(Log)
+    if desc:
+        query = query.order_by(Log.logdate.desc())
+    else:
+        query = query.order_by(Log.logdate)
+
+    if before and before < dt.now():
+        query = query.filter(Log.logdate <= before)
+
+    if limit and limit > 0:
+        query = query.limit(limit)
+    return query.all()
 
 def get_logs(db: Session) -> List[Log]:
     return db.query(Log).order_by(Log.logdate.desc()).all()

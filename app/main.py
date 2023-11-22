@@ -1,12 +1,10 @@
-from fastapi import FastAPI, Depends, Header
-from pydantic import BaseModel
+from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
-from typing import Optional
+from datetime import datetime as dt
 
-from database.setup_db import engine, SessionLocal, BaseSQL
+from database.setup_db import SessionLocal, BaseSQL
 from models import *
-
-from services import products_services, log_services
+from services import log_services, products_services
 
 app = FastAPI(
     title="ItemGuard",
@@ -41,8 +39,12 @@ def tables():
 def all_logs(db: Session = Depends(get_db)):
     return log_services.get_logs(db)
 
+@app.get("/logs/search")
+def search(limit: int = 0, desc: bool = True, before: dt = None, db: Session = Depends(get_db)):
+    return log_services.logs_query(db, limit=limit, desc=desc, before=before)
+
 @app.get("/logs/{limit}")
-def all_logs(limit: int, db: Session = Depends(get_db)):
+def all_logs_limit(limit: int, db: Session = Depends(get_db)):
     return log_services.get_logs_limited(db, limit)
 
 @app.delete("/log/{id}")

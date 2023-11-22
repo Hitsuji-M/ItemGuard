@@ -6,3 +6,4 @@ LogType = BaseSQL.classes.logtype
 Log = BaseSQL.classes.log
 ProductType = BaseSQL.classes.producttype
 Product = BaseSQL.classes.product
+User = BaseSQL.classes.user

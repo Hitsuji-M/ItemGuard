@@ -24,4 +24,11 @@ CREATE TABLE IF NOT EXISTS itemg.Product (
     price REAL DEFAULT 0.0,
     PRIMARY KEY(idProduct),
     CONSTRAINT fk_type_product_id FOREIGN KEY(idType) REFERENCES itemg.ProductType(idType)
+);
+
+CREATE TABLE IF NOT EXISTS itemg.User (
+    idUser SERIAL,
+    username VARCHAR(63) NOT NULL,
+    passwd VARCHAR(65) NOT NULL,
+    administrator BOOLEAN DEFAULT 0
 )

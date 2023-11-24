@@ -30,28 +30,21 @@ def tables():
 ### /// Authentication ///
 ###
 
+
 @app.post("/auth")
 def final_auth(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
-    user = auth_services.get_user_by_auth(db, model)
-    if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    token = auth_services.create_token(data={"mail": user.email})
-    return {"access_token": token, "token_type": "bearer"}
+    return auth_services.login(db, model)
 
 @app.post("/user/register")
-async def register_user(model: UserModel, db: Session = Depends(get_db)):
-    return auth_services.register(db, model)
+async def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    model = UserModel(email=form_data.username, passwd=form_data.password)
+    auth_services.register(db, model)
+    auth_services.login(db, model)
 
 @app.post("/user/login")
 async def login_user(db: Session = Depends(get_db)):
     pass
-
 
 @app.get("/user/me")
 async def profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):

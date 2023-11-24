@@ -1,3 +1,4 @@
 sqlalchemy
 pydantic
 psycopg2
+python-jose

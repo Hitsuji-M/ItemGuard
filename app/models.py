@@ -9,3 +9,9 @@ class ProductModel(BaseModel):
 class LogModel(BaseModel):
     idType: int
     logDate: datetime = datetime.now()
+
+class UserModel(BaseModel):
+    email: str
+    passwd: str
+    fullName: str = ""
+    administrator: bool = False

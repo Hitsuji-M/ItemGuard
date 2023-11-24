@@ -1,24 +1,20 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.responses import RedirectResponse
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import datetime as dt
 
-from database.setup_db import SessionLocal, BaseSQL
+from database.setup_db import BaseSQL
 from models import *
-from services import log_services, products_services
+from database.tables import User
+from services import log_services, products_services, auth_services
+from dependencies import get_db, get_current_user
 
 app = FastAPI(
     title="ItemGuard",
     description="Inventory software",
     version="0.0.1",
 )
-
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @app.get("/")
@@ -28,6 +24,40 @@ def root():
 @app.get("/db/tables")
 def tables():
     return BaseSQL.classes.keys()
+
+
+###
+### /// Authentication ///
+###
+
+@app.post("/auth")
+def final_auth(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    model = UserModel(email=form_data.username, passwd=form_data.password)
+    user = auth_services.get_user_by_auth(db, model)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = auth_services.create_token(data={"mail": user.email})
+    return {"access_token": token, "token_type": "bearer"}
+
+@app.post("/user/register")
+async def register_user(model: UserModel, db: Session = Depends(get_db)):
+    return auth_services.register(db, model)
+
+@app.post("/user/login")
+async def login_user(db: Session = Depends(get_db)):
+    pass
+
+
+@app.get("/user/me")
+async def profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user is None:
+        return RedirectResponse(url="/login")
+    return User
 
 
 ###

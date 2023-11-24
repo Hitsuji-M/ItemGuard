@@ -28,7 +28,9 @@ CREATE TABLE IF NOT EXISTS itemg.Product (
 
 CREATE TABLE IF NOT EXISTS itemg.User (
     idUser SERIAL,
-    username VARCHAR(63) NOT NULL,
-    passwd VARCHAR(65) NOT NULL,
-    administrator BOOLEAN DEFAULT 0
-)
+    email VARCHAR(64) NOT NULL,
+    passwd VARCHAR(64) NOT NULL,
+    fullName VARCHAR(128), 
+    administrator BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY(idUser)
+);

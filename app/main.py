@@ -37,20 +37,20 @@ def final_auth(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = D
     return auth_services.login(db, model)
 
 @app.post("/user/register")
-async def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
-    auth_services.login(db, model)
+    return auth_services.login(db, model)
 
 @app.post("/user/login")
-async def login_user(db: Session = Depends(get_db)):
+def login_user(db: Session = Depends(get_db)):
     pass
 
 @app.get("/user/me")
-async def profile(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+async def profile(user: User = Depends(get_current_user)):
     if user is None:
-        return RedirectResponse(url="/login")
-    return User
+        return RedirectResponse(url="/user/login")
+    return user
 
 
 ###

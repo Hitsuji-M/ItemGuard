@@ -10,17 +10,6 @@ from services.auth_services import get_user_by_mail
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth")
 
-def token_dependency(
-    dependency: Optional[Callable[..., Any]] = None,
-    *,
-    use_cache: bool = True
-):
-    try:
-        return params.Depends(dependency=dependency, use_cache=use_cache)
-    except HTTPException as _:
-        return ""
-
-
 def get_db():
     db = SessionLocal()
     try:
@@ -29,15 +18,12 @@ def get_db():
         db.close()
 
 
-def get_current_user(token: str = token_dependency(oauth2_scheme), db: Session = Depends(get_db)) -> User:
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-
-    if token == "":
-        return None
 
     try:
         payload = jwt.decode(token, "clubnix", algorithms=["HS256"])

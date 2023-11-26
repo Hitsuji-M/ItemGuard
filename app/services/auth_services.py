@@ -63,7 +63,7 @@ def register(db: Session, model: UserModel) -> int:
     db.refresh(new_user)
     return new_user.iduser
 
-def login(db: Session, model: UserModel) -> bool:
+def login(db: Session, model: UserModel) -> dict:
     user = get_user_by_auth(db, model)
     if not user:
         raise HTTPException(

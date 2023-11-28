@@ -47,11 +47,11 @@ def tables():
 ###
 
 
-@app.post("/user/login")
+@app.post("/auth")
 def final_auth(
+    response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-    response: Response = Depends()
+    db: Session = Depends(get_db)
 ):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     token_infos = auth_services.login(db, model)
@@ -63,7 +63,6 @@ def final_auth(
 def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
-    print(auth_services.login(db, model))
     return auth_services.login(db, model)
 
 @app.get("/user/me")

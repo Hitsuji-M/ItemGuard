@@ -7,7 +7,7 @@ from jose import JWTError, jwt, ExpiredSignatureError
 from database.tables import User
 from services.auth_services import get_user_by_mail
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth", auto_error=False)
 
 def get_db():
     db = SessionLocal()
@@ -18,6 +18,7 @@ def get_db():
 
 
 def get_session(request: Request):
+    print(request)
     return request
 
 
@@ -36,6 +37,9 @@ def get_current_user(
         token = session["token"]
 
     try:
+        if token is None:
+            raise credentials_exception
+
         payload = jwt.decode(token, "clubnix", algorithms=["HS256"])
         email: str = payload.get("mail")
         if email is None:

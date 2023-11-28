@@ -1,20 +1,36 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, Response
 from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
+from fastapi.middleware import cors
 from sqlalchemy.orm import Session
+from starlette.middleware import sessions
 from datetime import datetime as dt
 
 from database.setup_db import BaseSQL
 from models import *
 from database.tables import User
-from services import log_services, products_services, auth_services
 from dependencies import get_db, get_current_user
+
+import services.auth_services as auth_services
+import services.log_services as log_services
+import services.products_services as products_services
+
 
 app = FastAPI(
     title="ItemGuard",
     description="Inventory software",
     version="0.0.1",
 )
+
+app.add_middleware(
+    cors.CORSMiddleware,
+    allow_origins=["http://localhost:8501"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.add_middleware(sessions.SessionMiddleware, secret_key="clubnix")
 
 
 @app.get("/")
@@ -31,20 +47,22 @@ def tables():
 ###
 
 
-@app.post("/auth")
-def final_auth(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+@app.post("/user/login")
+def final_auth(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+    response: Response = Depends()
+):
     model = UserModel(email=form_data.username, passwd=form_data.password)
-    return auth_services.login(db, model)
+    token_infos = auth_services.login(db, model)
+    response.set_cookie("token", token_infos["access_token"])
+    return token_infos
 
 @app.post("/user/register")
 def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
     return auth_services.login(db, model)
-
-@app.post("/user/login")
-def login_user(db: Session = Depends(get_db)):
-    pass
 
 @app.get("/user/me")
 async def profile(user: User = Depends(get_current_user)):

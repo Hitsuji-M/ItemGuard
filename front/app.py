@@ -25,7 +25,7 @@ def login_page():
     if st.button("Se connecter"):
         # Faire la requête d'authentification à votre API FastAPI
         response = requests.post(
-            f"{api_url}/auth",
+            f"{api_url}/login",
             data={"grant_type": "password", "username": username, "password": password}
         )
 

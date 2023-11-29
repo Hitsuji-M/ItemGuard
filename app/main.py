@@ -19,6 +19,7 @@ import services.auth_services as auth_services
 import services.log_services as log_services
 import services.products_services as products_services
 
+REDIRECT = False
 
 app = FastAPI(
     title="ItemGuard",
@@ -33,7 +34,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 app.add_middleware(sessions.SessionMiddleware, secret_key="clubnix")
 
 
@@ -51,7 +51,7 @@ def tables():
 ###
 
 
-@app.post("/auth")
+@app.post("/login")
 def final_auth(
     response: Response,
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -60,16 +60,19 @@ def final_auth(
     model = UserModel(email=form_data.username, passwd=form_data.password)
     token_infos = auth_services.login(db, model)
     response.set_cookie(key="token", value=token_infos["access_token"])
-    print("Hello1")
-    return redirect_after_login(db, token_infos["access_token"])
+    if REDIRECT:
+        return redirect_after_login(db, token_infos["access_token"])
+    return token_infos
 
 
-@app.post("/user/register")
+@app.post("/register")
 def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
     token_infos = auth_services.login(db, model)
-    return redirect_after_login(db, token_infos["access_token"])
+    if REDIRECT:
+        return redirect_after_login(db, token_infos["access_token"])
+    return token_infos
 
 
 ###
@@ -93,7 +96,6 @@ async def user_profile(user: User = Depends(get_current_user)):
 @app.get("/admin/accueil")
 async def admin_main(user: User = Depends(get_current_user)):
     check_admin(user)
-    print("Hello3")
     return {"user": user.email}
 
 @app.get("/admin/me")

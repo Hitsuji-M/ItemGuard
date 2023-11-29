@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from database.tables import User
 from services.auth_services import get_user_by_token
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth", auto_error=False)
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
 def get_db():
     db = SessionLocal()
@@ -36,7 +36,6 @@ def get_current_user(
 def redirect_after_login(db: Session, token: str) -> RedirectResponse:
     user = get_user_by_token(db, token)
     if user.administrator:
-        print("Hello2")
         response = RedirectResponse(url="/admin/accueil", status_code=303, headers={"Authorization": "Bearer " + token})
         response.set_cookie(key="token", value=token)
     else:

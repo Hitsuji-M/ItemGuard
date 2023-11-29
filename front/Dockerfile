@@ -4,7 +4,6 @@ WORKDIR /front
 
 RUN pip install streamlit
 
-
 COPY . .
 
 EXPOSE 8501

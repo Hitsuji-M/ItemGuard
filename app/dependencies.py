@@ -1,11 +1,11 @@
 from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, Request, HTTPException
+from fastapi.responses import RedirectResponse
 from database.setup_db import SessionLocal
-from fastapi import Depends, HTTPException, Request
 from sqlalchemy.orm import Session
-from jose import JWTError, jwt, ExpiredSignatureError
 
 from database.tables import User
-from services.auth_services import get_user_by_mail
+from services.auth_services import get_user_by_token
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth", auto_error=False)
 
@@ -18,39 +18,33 @@ def get_db():
 
 
 def get_session(request: Request):
-    print(request)
     return request
 
 
 def get_current_user(
-    session: dict = Depends(get_session),
+    request: Request = Depends(get_session),
     token: str = Depends(oauth2_scheme),
     db: Session = Depends(get_db)
 ) -> User:
-    credentials_exception = HTTPException(
-        status_code=401,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
 
-    if "token" in session:
-        token = session["token"]
+    if "token" in request.cookies:
+        token = request.cookies["token"]
 
-    try:
-        if token is None:
-            raise credentials_exception
+    return get_user_by_token(db, token)
 
-        payload = jwt.decode(token, "clubnix", algorithms=["HS256"])
-        email: str = payload.get("mail")
-        if email is None:
-            raise credentials_exception
-    except JWTError as e:
-        if isinstance(e, ExpiredSignatureError):
-            raise HTTPException(status_code=401, detail="Session expired", headers={"WWW-Authenticate": "Bearer"})
-        raise credentials_exception
 
-    user = get_user_by_mail(db, email)
-    if user is None:
-        raise credentials_exception
-    
-    return user
+def redirect_after_login(db: Session, token: str) -> RedirectResponse:
+    user = get_user_by_token(db, token)
+    if user.administrator:
+        print("Hello2")
+        response = RedirectResponse(url="/admin/accueil", status_code=303, headers={"Authorization": "Bearer " + token})
+        response.set_cookie(key="token", value=token)
+    else:
+        response = RedirectResponse(url="/user/accueil", status_code=303, headers={"Authorization": "Bearer " + token})
+        response.set_cookie(key="token", value=token)
+    return response
+
+
+def check_admin(user: User) -> None:
+    if not user.administrator:
+        raise HTTPException(status_code=401, detail="Unhautorized")

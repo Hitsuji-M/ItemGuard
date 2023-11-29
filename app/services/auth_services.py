@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from typing import List
-from jose import jwt
+from jose import jwt, JWTError, ExpiredSignatureError
 from datetime import datetime as dt
 from datetime import timedelta
 
@@ -46,6 +46,33 @@ def get_user_by_auth(db: Session, model: UserModel):
     if user and check_password(model.passwd, user.passwd):
         return user
 
+def get_user_by_token(db: Session, token: str) -> User:
+    credentials_exception = HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    if not token:
+        raise credentials_exception
+
+    try:
+        payload = jwt.decode(token, "clubnix", algorithms=["HS256"])
+        email: str = payload.get("mail")
+        if email is None:
+            raise credentials_exception
+    except JWTError as e:
+        if isinstance(e, ExpiredSignatureError):
+            raise HTTPException(status_code=401, detail="Session expired", headers={"WWW-Authenticate": "Bearer"})
+        raise credentials_exception
+
+    user = get_user_by_mail(db, email)
+    if user is None:
+        raise credentials_exception
+    
+    return user
+    
+
 def register(db: Session, model: UserModel) -> int:
     user = None
     try:
@@ -62,6 +89,7 @@ def register(db: Session, model: UserModel) -> int:
     db.commit()
     db.refresh(new_user)
     return new_user.iduser
+
 
 def login(db: Session, model: UserModel) -> dict:
     user = get_user_by_auth(db, model)

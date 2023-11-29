@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Depends, Response
-from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware import cors
 from sqlalchemy.orm import Session
@@ -9,7 +8,12 @@ from datetime import datetime as dt
 from database.setup_db import BaseSQL
 from models import *
 from database.tables import User
-from dependencies import get_db, get_current_user
+from dependencies import (
+    get_db,
+    get_current_user,
+    redirect_after_login,
+    check_admin
+) 
 
 import services.auth_services as auth_services
 import services.log_services as log_services
@@ -55,22 +59,47 @@ def final_auth(
 ):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     token_infos = auth_services.login(db, model)
-    response.set_cookie("token", token_infos["access_token"])
-    return token_infos
+    response.set_cookie(key="token", value=token_infos["access_token"])
+    print("Hello1")
+    return redirect_after_login(db, token_infos["access_token"])
 
-#Filer les deux trucs en body
+
 @app.post("/user/register")
 def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
-    return auth_services.login(db, model)
+    token_infos = auth_services.login(db, model)
+    return redirect_after_login(db, token_infos["access_token"])
+
+
+###
+### /// User ///
+###
+
+
+@app.get("/user/accueil")
+async def user_main(user: User = Depends(get_current_user)):
+    return {"user": user.email}
 
 @app.get("/user/me")
-async def profile(user: User = Depends(get_current_user)):
-    if user is None:
-        return RedirectResponse(url="/user/login")
+async def user_profile(user: User = Depends(get_current_user)):
     return user
 
+
+###
+### /// Administrator ///
+###
+
+@app.get("/admin/accueil")
+async def admin_main(user: User = Depends(get_current_user)):
+    check_admin(user)
+    print("Hello3")
+    return {"user": user.email}
+
+@app.get("/admin/me")
+async def admin_profile(user: User = Depends(get_current_user)):
+    check_admin(user)
+    return user
 
 ###
 ### /// Logs ///

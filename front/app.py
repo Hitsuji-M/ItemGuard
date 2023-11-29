@@ -1,5 +1,6 @@
 import streamlit as st
 import requests
+from datetime import datetime as dt
 
 
 api_url = "http://api:5000"
@@ -52,6 +53,10 @@ def main_page(token):
         delete_product(token)
     elif selected_tab == "Mettre à jour":
         update_product(token)
+    elif selected_tab == "Logs":
+        show_logs()
+    elif selected_tab == "Profil":
+        profil()    
 
 
 def all_product(token):
@@ -182,8 +187,74 @@ def update_product(token):
 
 
 
+def show_logs():
+    st.header("Logs")
 
-    
+    # Liste déroulante pour choisir l'action
+    selected_action = st.selectbox("Choisir une action", ["Tous les logs", "Rechercher", "Logs limités", "Supprimer"])
+
+    if selected_action == "Tous les logs":
+        logs = get_all_logs()
+        st.write(logs)
+    elif selected_action == "Rechercher":
+        limit = st.number_input("Limite", value=0)
+        desc = st.checkbox("Tri décroissant", value=True)
+        before = st.date_input("Avant", value=None)
+        logs = search_logs(limit, desc, before)
+        st.write(logs)
+    elif selected_action == "Logs limités":
+        limit = st.number_input("Limite", value=10)
+        logs = get_logs_limit(limit)
+        st.write(logs)
+    elif selected_action == "Supprimer":
+        log_id = st.number_input("ID du log à supprimer", value=0, min_value=0)
+        if st.button("Supprimer"):
+            result = delete_log(log_id)
+            st.write(result)
+
+def get_all_logs():
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/logs", headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Échec de la récupération de tous les logs depuis FastAPI. Code d'erreur : {response.status_code}"
+
+def search_logs(limit: int, desc: bool, before: dt):
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"limit": limit, "desc": desc, "before": before}
+    response = requests.get(f"{api_url}/logs/search", headers=headers, params=params)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Échec de la recherche de logs depuis FastAPI. Code d'erreur : {response.status_code}"
+
+def get_logs_limit(limit: int):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/logs/{limit}", headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return f"Échec de la récupération de logs limités depuis FastAPI. Code d'erreur : {response.status_code}"
+
+def delete_log(log_id: int):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.delete(f"{api_url}/log/{log_id}", headers=headers)
+    if response.status_code == 200:
+        return "Log supprimé avec succès!"
+    else:
+        return f"Échec de la suppression du log depuis FastAPI. Code d'erreur : {response.status_code}"
+
+
+def profil():
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/user/me", headers=headers)
+    if response.status_code == 200:
+        user_data = response.json()
+        st.write("User Profile: ")
+        st.write(user_data)
+    else:
+        st.error(f"Échec de la récupération du profil utilisateur. Code d'erreur : {response.status_code}")
 
 
 if __name__ == '__main__':

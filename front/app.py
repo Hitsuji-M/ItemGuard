@@ -3,8 +3,57 @@ import requests
 
 
 api_url = "http://api:5000"
+token = None
 
 
+if "page" not in st.session_state:
+    st.session_state.page = 0
+
+def nextpage(): 
+    st.session_state.page += 1
+
+def restart(): 
+    st.session_state.page = 0
+
+def login_page():
+    global token
+    token = None
+    st.header("Connexion")
+    username = st.text_input("Nom d'utilisateur")
+    password = st.text_input("Mot de passe", type="password")
+
+    if st.button("Se connecter"):
+        # Faire la requête d'authentification à votre API FastAPI
+        response = requests.post(
+            f"{api_url}/auth",
+            data={"grant_type": "password", "username": username, "password": password}
+        )
+
+        if response.status_code == 200:
+            st.session_state.is_authenticated = True
+            token = response.json().get("access_token")
+            st.success("Connexion réussie! Vous pouvez accéder au reste de l'application.")
+            st.write(token)
+            nextpage()
+            st.rerun()
+    
+
+
+def main_page(token):
+    st.title("ItemGuard")   
+    st.sidebar.header("Navigation")
+    
+    # Onglets
+    selected_tab = st.sidebar.radio("Choisissez une action", ["Toutes les produits", "Créer", "Supprimer", "Mettre à jour"])
+
+    if selected_tab == "Tous les produits":
+        all_product(token)
+    elif selected_tab == "Créer":
+        create(token)
+    elif selected_tab == "Supprimer":
+        delete_product(token)
+    elif selected_tab == "Mettre à jour":
+        update_product(token)
 
 
 def all_product(token):
@@ -116,44 +165,25 @@ def update_product(token):
 
 
 
-def navigation(token):
-    if st.session_state.is_authenticated:
-        all_product(token)
-        create(token)
-        delete_product(token)
-        update_product(token)
 
-
-        
-def main():
-    st.title("ItemGuard")
-    st.session_state.setdefault('is_authenticated', False)
-    token = None
-
-    # Page de connexion
-    if not st.session_state.is_authenticated:
-        st.header("Connexion")
-
-        username = st.text_input("Nom d'utilisateur")
-        password = st.text_input("Mot de passe", type="password")
-
-        if st.button("Se connecter"):
-            # Faire la requête d'authentification à votre API FastAPI
-            response = requests.post(
-                f"{api_url}/auth",
-                data={"grant_type": "password", "username": username, "password": password}
-            )
-
-            if response.status_code == 200:
-                st.session_state.is_authenticated = True
-                token = response.json().get("access_token")
-                st.success("Connexion réussie! Vous pouvez accéder au reste de l'application.")
-                st.write(token)
-                
-    if st.session_state.is_authenticated:
-        navigation(token)
     
-        
+
+
 if __name__ == '__main__':
-    main()
+    if st.session_state.page == 0:
+        login_page()
+    else:
+        if st.session_state.is_authenticated:
+            main_page(token)
+
+
+
+
+
+
+
+
+
+
+
 

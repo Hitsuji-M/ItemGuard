@@ -21,6 +21,8 @@ CREATE TABLE IF NOT EXISTS itemg.ProductType (
 CREATE TABLE IF NOT EXISTS itemg.Product (
     idProduct SERIAL,
     idType INT NOT NULL,
+    productName VARCHAR(64) DEFAULT '',
+    quantity INT DEFAULT 0,
     price REAL DEFAULT 0.0,
     PRIMARY KEY(idProduct),
     CONSTRAINT fk_type_product_id FOREIGN KEY(idType) REFERENCES itemg.ProductType(idType)

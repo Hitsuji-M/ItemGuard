@@ -1,16 +1,16 @@
 INSERT INTO
-    itemg.ProductType
+    itemg.ProductType(nameType)
 VALUES
-    (1, 'Boisson'),
-    (2, 'Biscuits');
+    ('Boisson'),
+    ('Biscuits');
 
 
 INSERT INTO
-    itemg.LogType(idType, nameLog)
+    itemg.LogType(nameLog)
 VALUES
-    (1, 'Ajout produit'),
-    (2, 'Modification produit'),
-    (3, 'Suppression produit');
+    ('Ajout produit'),
+    ('Modification produit'),
+    ('Suppression produit');
 
 
 INSERT INTO itemg.User(email, passwd, fullName, administrator) VALUES('admin@itemg.fr', '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'admin', true);

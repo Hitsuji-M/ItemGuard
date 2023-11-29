@@ -36,15 +36,13 @@ def login_page():
             st.write(token)
             nextpage()
             st.rerun()
-    
-
 
 def main_page(token):
     st.title("ItemGuard")   
     st.sidebar.header("Navigation")
     
     # Onglets
-    selected_tab = st.sidebar.radio("Choisissez une action", ["Toutes les produits", "Créer", "Supprimer", "Mettre à jour"])
+    selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour"])
 
     if selected_tab == "Tous les produits":
         all_product(token)
@@ -57,34 +55,53 @@ def main_page(token):
 
 
 def all_product(token):
-    if st.button("Récupérer les données depuis FastAPI"):
-        headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(f"{api_url}/products", headers=headers)
-        if response.status_code == 200:
-            data = response.json()
-            st.write("Produits: ")
-            st.write(data)
-        else:
-            st.error("Échec de la récupération des données depuis FastAPI.")
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/products", headers=headers)
+    if response.status_code == 200:
+        data = response.json()
+        print(data)
+        st.write("Produits: ")
+        st.write(data)
+    else:
+        st.error("Échec de la récupération des données depuis FastAPI.")
 
 
 def create(token):
     st.header("Create")
+    types: dict[str, int] = {}
+    response = requests.get(
+        url=f"{api_url}/product/types",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json"
+        }
+    )
+    if response.status_code == 200:
+        data = response.json()
+        for row in data:
+            types.update({row['nametype']: row['idtype']})
 
     with st.form("create_product_form"):
         product_name = st.text_input("Nom du produit", key="product_name")
-        product_price = st.number_input("Prix du produit", key="product_price")
-
+        if types: product_type = st.radio("Type de produit", options=types.keys())
+        quantity_product = st.number_input("Quantité", key="quantity_product", min_value=0, max_value=999, step=1)
+        product_price = st.number_input("Prix du produit", key="product_price", min_value=0.0, max_value=999.0, step=0.5)
         submit_button = st.form_submit_button("Submit")
 
     if submit_button:
-        product_data = {"name": product_name, "price": product_price}
+        
+        product_data = {
+            "idType": types[product_type] if types else 0,
+            "productName": product_name,
+            "quantity": quantity_product,
+            "price": product_price
+        }
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.post(f"{api_url}/product", headers=headers, json=product_data)
 
         if response.status_code == 200:
             st.success("Produit créé avec succès!")
-            all_product(token)
+            st.write(product_name, product_type, quantity_product, product_price)
         else:
             st.error("Échec de la création du produit.")
 

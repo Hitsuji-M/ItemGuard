@@ -131,7 +131,7 @@ def rm_log(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/product")
-def create_product(product: ProductModel, db: Session = Depends(get_db)):
+def new_product(product: ProductModel, db: Session = Depends(get_db)):
     return products_services.create_product(db, product)
 
 @app.get("/products")
@@ -139,9 +139,13 @@ def all_products(db: Session = Depends(get_db)):
     return products_services.get_products(db)
 
 @app.delete("/product/{id}")
-def rm_product(id: int, db: Session = Depends(get_db)):
+def remove_product(id: int, db: Session = Depends(get_db)):
     return products_services.delete_product_by_id(db, id)
 
 @app.put("/product")
 def upd_product(product: ProductModel, db: Session = Depends(get_db)):
     return products_services.update_product(db, product)
+
+@app.get("/product/types")
+def all_product_types(db: Session = Depends(get_db)):
+    return products_services.get_product_types(db)

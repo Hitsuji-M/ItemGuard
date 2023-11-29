@@ -9,7 +9,7 @@ from services.log_services import *
 def create_product(db: Session, model: ProductModel) -> int:
     if not model.idType:
         raise HTTPException(status_code=422, detail="Missing values")
-    new_product = Product(idtype=model.idType, price=model.price)
+    new_product = Product(idtype=model.idType, price=model.price, quantity=model.quantity, productname=model.productName)
     db.add(new_product)
     db.commit()
     add_log(db, LogModel(idType=1))
@@ -40,3 +40,6 @@ def update_product(db: Session, product: ProductModel):
     db.refresh(db_product)
     add_log(db, LogModel(idType=2))
     return db_product
+
+def get_product_types(db: Session) -> List[ProductType]:
+    return db.query(ProductType).order_by(ProductType.idtype).all()

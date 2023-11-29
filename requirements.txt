@@ -3,3 +3,4 @@ pydantic
 psycopg2
 python-jose
 fastapi>=0.65.1
+streamlit-cookies-manager

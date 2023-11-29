@@ -81,11 +81,11 @@ def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session 
 
 
 @app.get("/user/accueil")
-async def user_main(user: User = Depends(get_current_user)):
+def user_main(user: User = Depends(get_current_user)):
     return {"user": user.email}
 
 @app.get("/user/me")
-async def user_profile(user: User = Depends(get_current_user)):
+def user_profile(user: User = Depends(get_current_user)):
     return user
 
 
@@ -109,19 +109,23 @@ async def admin_profile(user: User = Depends(get_current_user)):
 
 
 @app.get("/logs")
-def all_logs(db: Session = Depends(get_db)):
+def all_logs(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return log_services.get_logs(db)
 
 @app.get("/logs/search")
-def search(limit: int = 0, desc: bool = True, before: dt = None, db: Session = Depends(get_db)):
+def search(limit: int = 0, desc: bool = True, before: dt = None, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return log_services.logs_query(db, limit=limit, desc=desc, before=before)
 
 @app.get("/logs/{limit}")
-def all_logs_limit(limit: int, db: Session = Depends(get_db)):
+def all_logs_limit(limit: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return log_services.get_logs_limited(db, limit)
 
 @app.delete("/log/{id}")
-def rm_log(id: int, db: Session = Depends(get_db)):
+def rm_log(id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return log_services.delete_log_by_id(db, id)
 
 
@@ -131,7 +135,8 @@ def rm_log(id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/product")
-def new_product(product: ProductModel, db: Session = Depends(get_db)):
+def new_product(product: ProductModel, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return products_services.create_product(db, product)
 
 @app.get("/products")
@@ -139,11 +144,13 @@ def all_products(db: Session = Depends(get_db)):
     return products_services.get_products(db)
 
 @app.delete("/product/{id}")
-def remove_product(id: int, db: Session = Depends(get_db)):
+def remove_product(id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return products_services.delete_product_by_id(db, id)
 
 @app.put("/product")
-def upd_product(product: ProductModel, db: Session = Depends(get_db)):
+def upd_product(product: ProductModel, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    check_admin(user)
     return products_services.update_product(db, product)
 
 @app.get("/product/types")

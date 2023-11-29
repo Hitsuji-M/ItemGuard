@@ -46,7 +46,7 @@ def main_page(token):
     # Onglets
     selected_tab = st.sidebar.radio("Choisissez une action", ["Toutes les produits", "Créer", "Supprimer", "Mettre à jour"])
 
-    if selected_tab == "Toutes les produits":
+    if selected_tab == "Tous les produits":
         all_product(token)
     elif selected_tab == "Créer":
         create(token)
@@ -165,16 +165,16 @@ def update_product(token):
 
 
 
-def navigation():
-    if st.session_state.is_authenticated:
-        main_page(token)
+
+    
 
 
 if __name__ == '__main__':
     if st.session_state.page == 0:
         login_page()
     else:
-        navigation()
+        if st.session_state.is_authenticated:
+            main_page(token)
 
 
 

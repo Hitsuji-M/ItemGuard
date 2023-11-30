@@ -1,6 +1,7 @@
 import streamlit as st
 import requests
 from datetime import datetime as dt
+import re
 
 
 
@@ -17,11 +18,17 @@ def restart():
 
 def login_page() -> str:
     st.header("Connexion")
-    username = st.text_input("Nom d'utilisateur")
+    username: str = st.text_input("Nom d'utilisateur")
+    username = username.lower()
     password = st.text_input("Mot de passe", type="password")
 
     token = ""
     if st.button("Se connecter"):
+        pattern = re.compile("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+")
+        if not pattern.match(username):
+            st.error("Incorrect email format")
+            return ""
+
         # Faire la requête d'authentification à votre API FastAPI
         response = requests.post(
             f"{api_url}/login",

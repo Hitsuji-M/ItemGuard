@@ -4,7 +4,7 @@ from typing import List
 
 from database.tables import *
 from models import *
-from services.log_services import *
+from services.log_services import add_log
 
 def create_product(db: Session, model: ProductModel) -> int:
     if not model.idType:
@@ -42,4 +42,5 @@ def update_product(db: Session, product: ProductModel):
     return db_product
 
 def get_product_types(db: Session) -> List[ProductType]:
+    print("Hello2")
     return db.query(ProductType).order_by(ProductType.idtype).all()

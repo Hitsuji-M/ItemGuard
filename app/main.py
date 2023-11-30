@@ -143,6 +143,10 @@ def new_product(product: ProductModel, db: Session = Depends(get_db), user: User
 def all_products(db: Session = Depends(get_db)):
     return products_services.get_products(db)
 
+@app.get("/product/{id}")
+def single_product(id: int, db: Session = Depends(get_db)):
+    return products_services.get_product_by_id(db, id)
+
 @app.delete("/product/{id}")
 def remove_product(id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     check_admin(user)
@@ -153,6 +157,7 @@ def upd_product(product: ProductModel, db: Session = Depends(get_db), user: User
     check_admin(user)
     return products_services.update_product(db, product)
 
-@app.get("/product/types")
+@app.get("/types/product")
 def all_product_types(db: Session = Depends(get_db)):
+    print("Hello")
     return products_services.get_product_types(db)

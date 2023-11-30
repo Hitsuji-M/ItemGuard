@@ -59,6 +59,22 @@ def main_page(token: str):
         profil(token)
 
 
+def get_product_types(token: str):
+    types: dict[str, int] = {}
+    response = requests.get(
+        url=f"{api_url}/types/product",
+        headers={
+            "Authorization": f"Bearer {token}"
+        }
+    )
+    if response.status_code == 200:
+        data = response.json()
+        for row in data:
+            types.update({row['nametype']: row['idtype']})
+    return types
+
+
+
 def all_product(token):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/products", headers=headers)
@@ -73,18 +89,7 @@ def all_product(token):
 
 def create(token):
     st.header("Create")
-    types: dict[str, int] = {}
-    response = requests.get(
-        url=f"{api_url}/product/types",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Content-Type": "application/json"
-        }
-    )
-    if response.status_code == 200:
-        data = response.json()
-        for row in data:
-            types.update({row['nametype']: row['idtype']})
+    types: dict[str, int] = get_product_types(token)
 
     with st.form("create_product_form"):
         product_name = st.text_input("Nom du produit", key="product_name")
@@ -122,11 +127,11 @@ def delete_product(token):
         product_data = response.json()
 
         # Liste déroulante pour choisir quel élément supprimer
-        selected_product_name = st.selectbox("Choisir un produit à supprimer", [product["name"] for product in product_data])
+        selected_product_name = st.selectbox("Choisir un produit à supprimer", [product["productname"] for product in product_data])
 
         # Bouton pour supprimer le produit sélectionné
         if st.button("Supprimer"):
-            selected_product_id = next((product["id"] for product in product_data if product["name"] == selected_product_name), None)
+            selected_product_id = next((product["idproduct"] for product in product_data if product["productname"] == selected_product_name), None)
             if selected_product_id:
                 response = requests.delete(f"{api_url}/product/{selected_product_id}", headers=headers)
                 if response.status_code == 200:
@@ -150,11 +155,13 @@ def update_product(token):
     if response.status_code == 200:
         product_data = response.json()
 
+        types: dict[str, int] = get_product_types(token)
+
         # Liste déroulante pour choisir quel élément mettre à jour
-        selected_product_name = st.selectbox("Choisir un produit à mettre à jour", [product["name"] for product in product_data])
+        selected_product_name = st.selectbox("Choisir un produit à mettre à jour", [product["productname"] for product in product_data])
 
         # Récupérer l'ID du produit sélectionné
-        selected_product_id = next((product["id"] for product in product_data if product["name"] == selected_product_name), None)
+        selected_product_id = next((product["idproduct"] for product in product_data if product["productname"] == selected_product_name), None)
 
         if selected_product_id is not None:
             # Récupérer les données du produit depuis l'API
@@ -165,13 +172,28 @@ def update_product(token):
 
                 # Formulaire pré-rempli avec les données du produit
                 with st.form("update_product_form"):
-                    product_name = st.text_input("Nom du produit", key="product_name", value=product_data["name"])
+                    listed_types = []
+                    idx = 0
+                    if types:
+                        for i, p_type in enumerate(types.keys()):
+                            listed_types.append(p_type)
+                            if types[p_type] == product_data["idtype"]: idx = i 
+
+                    product_name = st.text_input("Nom du produit", key="product_name", value=product_data["productname"])
+                    if types: product_type = st.radio("Type de produit", options=types.keys(), index=idx)
+                    quantity_product = st.number_input("Quantité", key="quantity_product", min_value=0, max_value=999, step=1, value=product_data["quantity"])
                     product_price = st.number_input("Prix du produit", key="product_price", value=product_data["price"])
 
                     submit_button = st.form_submit_button("Mettre à jour le produit")
 
                 if submit_button:
-                    updated_product_data = {"id": selected_product_id, "name": product_name, "price": product_price}
+                    updated_product_data = {
+                        "idProduct": selected_product_id,
+                        "idType": types[product_type] if types else 0,
+                        "productName": product_name,
+                        "quantity": quantity_product,
+                        "price": product_price
+                    }
                     response = requests.put(f"{api_url}/product", headers=headers, json=updated_product_data)
 
                     if response.status_code == 200:

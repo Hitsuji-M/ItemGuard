@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 from datetime import datetime as dt
-from time import sleep
+
 
 
 api_url = "http://api:5000"
@@ -222,6 +222,7 @@ def show_logs(token: str):
         limit = st.number_input("Limite", value=0)
         desc = st.checkbox("Tri décroissant", value=True)
         before = st.date_input("Avant", value=None)
+        before = dt.combine(before, dt.max.time()) if before else dt.now()
         logs = search_logs(limit, desc, before, token)
         st.write(logs)
     elif selected_action == "Logs limités":

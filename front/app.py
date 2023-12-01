@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 from datetime import datetime as dt
 import re
+import hashlib
 
 
 api_url = "http://api:5000"
@@ -67,7 +68,7 @@ def main_page(token: str):
 
     # Différents onglets possible
     if admin:    
-        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil"])
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil","Modifier Profil"])
         if selected_tab == "Créer":
             create(token)
         elif selected_tab == "Supprimer":
@@ -77,11 +78,13 @@ def main_page(token: str):
         elif selected_tab == "Logs":
             show_logs(token)
     else:
-        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Profil"])
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Profil","Modifier Profil"])
     if selected_tab == "Tous les produits":
         all_product(token)
     elif selected_tab == "Profil":
         profil(token)
+    elif selected_tab == "Modifier Profil":
+        update_profile_page(token)
 
 # Permet de récupérer le type des données
 def get_product_types(token: str):
@@ -307,6 +310,47 @@ def profil(token: str):
         st.write(user_data)
     else:
         st.error(f"Échec de la récupération du profil utilisateur. Code d'erreur : {response.status_code}, {response.reason}")
+
+
+
+#On récupère les infos d'un utilisateur
+def get_user_profile(token: str):
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/user/me", headers=headers)
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        return None
+
+#Changement du profil
+def update_profile_page(token: str):
+    st.header("Mise à jour du Profil")
+    user_data = get_user_profile(token)
+
+    if user_data:
+        with st.form("update_profile_form"):
+            new_email = st.text_input("Nouvel email", value=user_data.get("email"))
+            new_password = st.text_input("Nouveau mot de passe", type="password")
+            new_password = hashlib.sha256(bytes(new_password, encoding="utf-8")).hexdigest()
+            submit_button = st.form_submit_button("Mettre à jour le profil")
+
+        if submit_button:
+            updated_profile_data = {
+                "email": new_email,
+                "passwd": new_password,
+                "administrator": user_data["administrator"],
+            }
+
+            response = requests.put(f"{api_url}/update_user", headers={"Authorization": f"Bearer {token}"}, json=updated_profile_data)
+
+            if response.status_code == 200:
+                st.success("Profil mis à jour avec succès!")
+            else:
+                st.error(f"Échec de la mise à jour du profil. Code d'erreur : {response.status_code}")
+    else:
+        st.error("Échec de la récupération du profil utilisateur.")
+
 
 
 if __name__ == '__main__':

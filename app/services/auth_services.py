@@ -102,3 +102,15 @@ def login(db: Session, model: UserModel) -> dict:
 
     token = create_token(data={"mail": user.email})
     return {"access_token": token, "token_type": "bearer"}
+
+
+def update_user_profile(db: Session, email: str, updated_profile: UserModel):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.email = updated_profile.email
+    user.passwd = updated_profile.passwd
+    user.administrator = updated_profile.administrator
+
+    db.commit()

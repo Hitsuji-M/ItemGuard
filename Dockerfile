@@ -8,4 +8,5 @@ ADD wait-for-it.sh .
 
 RUN pip install -r requirements.txt
 
+
 COPY ./app /app/app

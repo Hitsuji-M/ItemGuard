@@ -26,7 +26,7 @@ Notre objectif est de simuler une application de gestion des stocks. Notre appli
 - Une gestion des utilisateurs avec des différences de permissions entre un utilisateur et un admin
 - La modification de son profil
 
-## Architecture :
+## Architecture
 
 ### BDD
 

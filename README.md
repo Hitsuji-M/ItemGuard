@@ -1,38 +1,35 @@
 # ItemGuard
 
+## Instructions d'installation
 
-## Gestion des stocks :
+git clone
 
-Base de données comprenant plusieurs produits différents. Gestion quantité / entrée ou sortie de produit (logs) / gestion de la zone de rangement (ex: 20 objets par ligne, donc gestion du déplacement de produit) 
+docker compose up --build
 
+Aller sur localhost:8501
 
-## Fonctionnalités:
+## Présentation du projet
 
-Rajouter / enlever / consulter un ou plusieurs objets / voir les logs (Filtre date peut être) / 
+Notre objectif est de simuler une application de gestion des stocks. Notre application offre les possibilités suivantes:
 
+- Créer, modifier, supprimer un produit (nom,prix,quantité)
+- Une gestion des logs ainsi qu'un tri de ces logs en fonction de plusieurs paramètres
+- Une gestion des utilisateurs avec des différences de permissions entre un utilisateur et un admin
+- La modification de son profil
 
 ## Architecture :
 
 ### BDD
+
 - Table LogType
 - Table Log
-- (Table Utilisateur)
+- Table Utilisateur
 - Table Produit
 - Table TypeProduit
-- Table Zone ?
 
-
-## Technos
+## Packages utilisés
 
 - Python
 - FastAPI
 - PostgreSQL
-- Redis ?
-
-
-## Idées ++
-
-Différents utilisateurs, admin (modifier les stocks) / regular (Juste regarder) 
-Certains produits sont cachés (seulement accessible pour certains utilisateurs) peut être
-
---> Redis nécessaire pour donner de session (ou gestion des cookies)
+- Streamlit

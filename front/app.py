@@ -4,9 +4,10 @@ from datetime import datetime as dt
 import re
 
 
-
 api_url = "http://api:5000"
 
+
+#Gestion des différentes pages
 if "page" not in st.session_state:
     st.session_state.page = 0
 
@@ -16,6 +17,8 @@ def nextpage():
 def restart(): 
     st.session_state.page = 0
 
+
+#Page de connexion
 def login_page() -> str:
     st.header("Connexion")
     username: str = st.text_input("Nom d'utilisateur")
@@ -29,7 +32,6 @@ def login_page() -> str:
             st.error("Incorrect email format")
             return ""
 
-        # Faire la requête d'authentification à votre API FastAPI
         response = requests.post(
             f"{api_url}/login",
             data={"grant_type": "password", "username": username, "password": password}
@@ -45,27 +47,43 @@ def login_page() -> str:
             st.rerun()
     return token
 
+
+#Page principale
 def main_page(token: str):
     st.title("ItemGuard")   
     st.sidebar.header("Navigation")
-    
-    # Onglets
-    selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil"])
 
+
+    headers = {"Authorization": f"Bearer {token}"}
+    response = requests.get(f"{api_url}/user/me", headers=headers)
+    if response.status_code == 200:
+        user_data = response.json()
+    else:
+        st.error(f"Échec de la récupération du profil utilisateur. Code d'erreur : {response.status_code}, {response.reason}")
+
+    admin = user_data["administrator"]
+    st.write(admin)
+
+
+    # Différents onglets possible
+    if admin:    
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil"])
+        if selected_tab == "Créer":
+            create(token)
+        elif selected_tab == "Supprimer":
+            delete_product(token)
+        elif selected_tab == "Mettre à jour":
+            update_product(token)
+        elif selected_tab == "Logs":
+            show_logs(token)
+    else:
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Profil"])
     if selected_tab == "Tous les produits":
         all_product(token)
-    elif selected_tab == "Créer":
-        create(token)
-    elif selected_tab == "Supprimer":
-        delete_product(token)
-    elif selected_tab == "Mettre à jour":
-        update_product(token)
-    elif selected_tab == "Logs":
-        show_logs(token)
     elif selected_tab == "Profil":
         profil(token)
 
-
+# Permet de récupérer le type des données
 def get_product_types(token: str):
     types: dict[str, int] = {}
     response = requests.get(
@@ -81,7 +99,7 @@ def get_product_types(token: str):
     return types
 
 
-
+# Affiche l'intégralité des produits  présents dans la base
 def all_product(token):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/products", headers=headers)
@@ -93,7 +111,7 @@ def all_product(token):
     else:
         st.error("Échec de la récupération des données depuis FastAPI.")
 
-
+# Création d'un nouveau produit
 def create(token):
     st.header("Create")
     types: dict[str, int] = get_product_types(token)
@@ -123,20 +141,20 @@ def create(token):
             st.error("Échec de la création du produit.")
 
 
+#Supprimer un produit
 def delete_product(token):
     st.header("Delete Product")
 
-    # Récupérer la liste des produits
+    
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/products", headers=headers)
     
     if response.status_code == 200:
         product_data = response.json()
 
-        # Liste déroulante pour choisir quel élément supprimer
+        
         selected_product_name = st.selectbox("Choisir un produit à supprimer", [product["productname"] for product in product_data])
 
-        # Bouton pour supprimer le produit sélectionné
         if st.button("Supprimer"):
             selected_product_id = next((product["idproduct"] for product in product_data if product["productname"] == selected_product_name), None)
             if selected_product_id:
@@ -151,11 +169,11 @@ def delete_product(token):
         st.error("Échec de la récupération des produits depuis FastAPI.")
 
 
-
+# Mettre à jour un produit
 def update_product(token):
     st.header("Update Product")
 
-    # Récupérer la liste des produits
+    
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/products", headers=headers)
     
@@ -164,20 +182,20 @@ def update_product(token):
 
         types: dict[str, int] = get_product_types(token)
 
-        # Liste déroulante pour choisir quel élément mettre à jour
+       
         selected_product_name = st.selectbox("Choisir un produit à mettre à jour", [product["productname"] for product in product_data])
 
-        # Récupérer l'ID du produit sélectionné
+        
         selected_product_id = next((product["idproduct"] for product in product_data if product["productname"] == selected_product_name), None)
 
         if selected_product_id is not None:
-            # Récupérer les données du produit depuis l'API
+            
             response = requests.get(f"{api_url}/product/{selected_product_id}", headers=headers)
 
             if response.status_code == 200:
                 product_data = response.json()
 
-                # Formulaire pré-rempli avec les données du produit
+                
                 with st.form("update_product_form"):
                     listed_types = []
                     idx = 0
@@ -215,11 +233,11 @@ def update_product(token):
         st.error("Échec de la récupération des produits depuis FastAPI.")
 
 
-
+#Permet de gèrer les logs en appellant la fonction qui correspond à l'action souahitée
 def show_logs(token: str):
     st.header("Logs")
 
-    # Liste déroulante pour choisir l'action
+    
     selected_action = st.selectbox("Choisir une action", ["Tous les logs", "Rechercher", "Logs limités", "Supprimer"])
 
     if selected_action == "Tous les logs":
@@ -242,6 +260,7 @@ def show_logs(token: str):
             result = delete_log(log_id, token)
             st.write(result)
 
+#Tous les logs
 def get_all_logs(token: str):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/logs", headers=headers)
@@ -250,6 +269,7 @@ def get_all_logs(token: str):
     else:
         return f"Échec de la récupération de tous les logs depuis FastAPI. Code d'erreur : {response.status_code}"
 
+#Logs spécifiques en fonction d'une date et d'une limite
 def search_logs(limit: int, desc: bool, before: dt, token: str):
     headers = {"Authorization": f"Bearer {token}"}
     params = {"limit": limit, "desc": desc, "before": before}
@@ -259,6 +279,7 @@ def search_logs(limit: int, desc: bool, before: dt, token: str):
     else:
         return f"Échec de la recherche de logs depuis FastAPI. Code d'erreur : {response.status_code}"
 
+#Juste en fonction de la limite
 def get_logs_limit(limit: int, token: str):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/logs/{limit}", headers=headers)
@@ -267,15 +288,16 @@ def get_logs_limit(limit: int, token: str):
     else:
         return f"Échec de la récupération de logs limités depuis FastAPI. Code d'erreur : {response.status_code}"
 
+#Supprimer un log
 def delete_log(log_id: int, token: str):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.delete(f"{api_url}/log/{log_id}", headers=headers)
     if response.status_code == 200:
         return "Log supprimé avec succès!"
     else:
-        return f"Échec de la suppression du log depuis FastAPI. Code d'erreur : {response.status_code}"
+        return f"Échec de la suppression du log. Code d'erreur : {response.status_code}"
 
-
+# Afficher le profil
 def profil(token: str):
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/user/me", headers=headers)

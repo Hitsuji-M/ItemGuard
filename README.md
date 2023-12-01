@@ -2,11 +2,20 @@
 
 ## Instructions d'installation
 
-git clone
+Cloner le fichier dans un terminal:
+git clone https://git.esiee.fr/massone/itemguard
 
+Ouvrir VSCode et aller dans le fichier itemguard
+
+Exécuter cette commande dans VSCode:
 docker compose up --build
 
-Aller sur localhost:8501
+Aller sur localhost:8501 pour lancer streamlit
+
+Se connecter avec les identifiants admin pour avoir l'accès complet:
+
+User: admin@itemg.fr
+Password: admin
 
 ## Présentation du projet
 
@@ -33,3 +42,6 @@ Notre objectif est de simuler une application de gestion des stocks. Notre appli
 - FastAPI
 - PostgreSQL
 - Streamlit
+
+
+

@@ -11,13 +11,11 @@ Aller sur localhost:8501 pour lancer streamlit
 
 Se connecter avec les identifiants admin pour avoir l'accès complet:
 
-admin@itemg.fr
-admin
+admin@itemg.fr / admin
 
 Ou
 
-user@itemg.fr
-user
+user@itemg.fr / user
 
 
 ## Présentation du projet

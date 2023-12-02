@@ -8,6 +8,13 @@ from models import *
 
 
 def logs_query(db: Session, limit: int = 0, desc: bool = True, before: dt = None) -> List[Log]:
+    """
+    Returns a list of logs based on 3 parameters :
+    - Number limit of logs
+    - Ascendant or Descendent order (based on the date)
+    - Date limit (skip all logs with a more recent date than the one given)
+    """
+
     query = db.query(Log)
     if desc:
         query = query.order_by(Log.logdate.desc())
@@ -36,6 +43,7 @@ def get_logs_limited(db: Session, limit: int) -> List[Log]:
     return db.query(Log).order_by(Log.logdate.desc()).limit(limit).all()
 
 def add_log(db: Session, model: LogModel) -> int:
+    """Add a log in the database (called automatically by creat/update/delete products services)"""
     if not model.idType:
         raise HTTPException(status_code=422, detail="Missing values")
     new_log = Log(idtype=model.idType, logdate=model.logDate)

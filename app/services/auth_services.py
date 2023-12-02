@@ -11,12 +11,15 @@ from database.tables import *
 from models import *
 
 def hash_password(password: str) -> str:
+    """Returns the hexadecimal value of hashed password (SHA256 algorithm)"""
     return hashlib.sha256(bytes(password, encoding="utf-8")).hexdigest()
 
 def check_password(password: str, hashed: str) -> bool:
+    """Check the validity of a pasword"""
     return hashed == hash_password(password)
 
 def create_token(data: dict) -> str:
+    """Create a token with the email of the user and an expiration of 1 day and returns it"""
     to_encode = data.copy()
     expiration = dt.utcnow() + timedelta(days=1)
     to_encode.update({"exp": expiration})
@@ -38,6 +41,10 @@ def get_user_by_mail(db: Session, email: str):
     return user
 
 def get_user_by_auth(db: Session, model: UserModel):
+    """
+    Get the user by his email
+    If a user is found check the validity of the password
+    """
     try:
         user = get_user_by_mail(db, model.email)
     except HTTPException as _:
@@ -47,6 +54,10 @@ def get_user_by_auth(db: Session, model: UserModel):
         return user
 
 def get_user_by_token(db: Session, token: str) -> User:
+    """
+    Check if the token validity
+    Then, returns the corresponding user
+    """
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -74,6 +85,10 @@ def get_user_by_token(db: Session, token: str) -> User:
     
 
 def register(db: Session, model: UserModel) -> int:
+    """
+    This service check if no user exist in the database with the same email
+    If not, hash the password and add the user to the database
+    """
     user = None
     try:
         user = get_user_by_mail(db, model.email)
@@ -92,6 +107,7 @@ def register(db: Session, model: UserModel) -> int:
 
 
 def login(db: Session, model: UserModel) -> dict:
+    """Create and returns authorization token for the user if the login informations are valid"""
     user = get_user_by_auth(db, model)
     if not user:
         raise HTTPException(

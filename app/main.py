@@ -57,6 +57,14 @@ def final_auth(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
+    """
+    Login route. Takes a Request Form as a parameter wit the values :
+    - grant_type = 'password'
+    - username = your_username
+    - password = your_password
+
+    Set the cookie "token" in the response then returns the authorization token or redirect to another page
+    """
     model = UserModel(email=form_data.username, passwd=form_data.password)
     token_infos = auth_services.login(db, model)
     response.set_cookie(key="token", value=token_infos["access_token"])
@@ -67,6 +75,9 @@ def final_auth(
 
 @app.post("/register")
 def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+    """
+    The register route creates a user in the database then calls the login service as the login route
+    """
     model = UserModel(email=form_data.username, passwd=form_data.password)
     auth_services.register(db, model)
     token_infos = auth_services.login(db, model)

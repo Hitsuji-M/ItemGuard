@@ -108,7 +108,6 @@ def all_product(token):
     response = requests.get(f"{api_url}/products", headers=headers)
     if response.status_code == 200:
         data = response.json()
-        print(data)
         st.write("Produits: ")
         st.write(data)
     else:
@@ -338,6 +337,11 @@ def update_profile_page(token: str):
             submit_button = st.form_submit_button("Mettre à jour le profil")
 
         if submit_button:
+            pattern = re.compile("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+")
+            if not pattern.match(new_email):
+                st.error("Incorrect email format")
+                return
+
             updated_profile_data = {
                 "email": new_email,
                 "passwd": hashed_password if hashed_password else user_data["passwd"],

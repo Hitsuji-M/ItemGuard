@@ -69,7 +69,7 @@ def get_user_by_token(db: Session, token: str) -> User:
     user = get_user_by_mail(db, email)
     if user is None:
         raise credentials_exception
-    
+
     return user
     
 
@@ -104,13 +104,13 @@ def login(db: Session, model: UserModel) -> dict:
     return {"access_token": token, "token_type": "bearer"}
 
 
-def update_user_profile(db: Session, email: str, updated_profile: UserModel):
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
+def update_user_profile(db: Session, email: str, updated_profile: UserModel) -> int:
+    user = get_user_by_mail(db, email)
     user.email = updated_profile.email
     user.passwd = updated_profile.passwd
     user.administrator = updated_profile.administrator
 
+    db.add(user)
     db.commit()
+    db.refresh(user)
+    return user.iduser

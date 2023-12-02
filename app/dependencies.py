@@ -10,7 +10,6 @@ from services.auth_services import get_user_by_token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login", auto_error=False)
 
 def get_db():
-    print("Hello3")
     db = SessionLocal()
     try:
         yield db

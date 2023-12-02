@@ -54,21 +54,19 @@ def main_page(token: str):
     st.title("ItemGuard")   
     st.sidebar.header("Navigation")
 
-
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.get(f"{api_url}/user/me", headers=headers)
+    admin = False
     if response.status_code == 200:
         user_data = response.json()
+        admin = user_data["administrator"]
+        st.write(admin)
     else:
         st.error(f"Échec de la récupération du profil utilisateur. Code d'erreur : {response.status_code}, {response.reason}")
 
-    admin = user_data["administrator"]
-    st.write(admin)
-
-
     # Différents onglets possible
     if admin:    
-        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil","Modifier Profil"])
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil","Modifier Profil", "Déconnexion"])
         if selected_tab == "Créer":
             create(token)
         elif selected_tab == "Supprimer":
@@ -78,13 +76,15 @@ def main_page(token: str):
         elif selected_tab == "Logs":
             show_logs(token)
     else:
-        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Profil","Modifier Profil"])
+        selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Profil","Modifier Profil", "Déconnexion"])
     if selected_tab == "Tous les produits":
         all_product(token)
     elif selected_tab == "Profil":
         profil(token)
     elif selected_tab == "Modifier Profil":
         update_profile_page(token)
+    elif selected_tab == "Déconnexion":
+        disconnect()
 
 # Permet de récupérer le type des données
 def get_product_types(token: str):
@@ -329,27 +329,37 @@ def update_profile_page(token: str):
     user_data = get_user_profile(token)
 
     if user_data:
+        administrator = False
         with st.form("update_profile_form"):
             new_email = st.text_input("Nouvel email", value=user_data.get("email"))
             new_password = st.text_input("Nouveau mot de passe", type="password")
-            new_password = hashlib.sha256(bytes(new_password, encoding="utf-8")).hexdigest()
+            if user_data["administrator"]: administrator = st.checkbox("Administrateur", value=True)
+            hashed_password = hashlib.sha256(bytes(new_password, encoding="utf-8")).hexdigest()
             submit_button = st.form_submit_button("Mettre à jour le profil")
 
         if submit_button:
             updated_profile_data = {
                 "email": new_email,
-                "passwd": new_password,
-                "administrator": user_data["administrator"],
+                "passwd": hashed_password if hashed_password else user_data["passwd"],
+                "administrator": administrator,
             }
 
-            response = requests.put(f"{api_url}/update_user", headers={"Authorization": f"Bearer {token}"}, json=updated_profile_data)
-
+            response = requests.put(f"{api_url}/user/update", headers={"Authorization": f"Bearer {token}"}, json=updated_profile_data)
             if response.status_code == 200:
                 st.success("Profil mis à jour avec succès!")
+                st.session_state.is_authenticated = False
+                st.session_state.page = 0
+                st.rerun()
             else:
                 st.error(f"Échec de la mise à jour du profil. Code d'erreur : {response.status_code}")
     else:
         st.error("Échec de la récupération du profil utilisateur.")
+
+
+def disconnect():
+    st.session_state.is_authenticated = False
+    st.session_state.page = 0
+    st.rerun()
 
 
 

@@ -42,5 +42,4 @@ def update_product(db: Session, product: ProductModel):
     return db_product
 
 def get_product_types(db: Session) -> List[ProductType]:
-    print("Hello2")
     return db.query(ProductType).order_by(ProductType.idtype).all()

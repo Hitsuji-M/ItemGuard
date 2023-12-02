@@ -74,15 +74,13 @@ def register_user(form_data: OAuth2PasswordRequestForm = Depends(), db: Session 
         return redirect_after_login(db, token_infos["access_token"])
     return token_infos
 
-@app.put("/update_user")
+
+@app.put("/user/update")
 def update_user_profile(updated_profile: UserModel, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-   return auth_services.update_user_profile(db, user.email, updated_profile)
+    if updated_profile.administrator != user.administrator:
+        check_admin(user)
+    return auth_services.update_user_profile(db, user.email, updated_profile)
         
-  
-
-    
-    
-
 
 ###
 ### /// User ///
@@ -168,5 +166,4 @@ def upd_product(product: ProductModel, db: Session = Depends(get_db), user: User
 
 @app.get("/types/product")
 def all_product_types(db: Session = Depends(get_db)):
-    print("Hello")
     return products_services.get_product_types(db)

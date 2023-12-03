@@ -29,6 +29,31 @@ Notre objectif est de simuler une application de gestion des stocks. Notre appli
 
 ## Architecture
 
+
+### Fichiers
+
+Voici une rapide description de l'utilité de chaque fichier afin de mieux comprendre comment tout est orchestré.
+
+#### Service
+
+- auth_services --> L'ensemble des fonctions permettant de gérer l'authentification des utilisateurs
+- log_services --> L'ensemble des fonctions gérant les logs
+- product_services --> L'ensemble des fonctions gérant les produits
+- dependencies --> Fonctions annexes 
+- main --> C'est ici qu'on crée l'ensemble des routes 
+- models --> Création des modèles de données
+
+#### Front
+
+- app --> Gestion de la page streamlit avec toutes les fonctions nécessaires à son fonctionnement
+
+#### Initialization-scripts
+
+- 2-schema-itemguard --> Création de toutes les tables
+
+- 3-inserts-itemguard --> Insertion d'éléments dans les tables. C'est ici qu'on ajoute les utilisateurs par exemple.
+
+
 ### BDD
 
 - Table LogType

@@ -69,3 +69,13 @@ Voici une rapide description de l'utilité de chaque fichier afin de mieux compr
 - PostgreSQL
 - Streamlit
 - Adminer
+
+
+## Conclusion
+
+Notre projet avait pour but de créer un système basique de gestion des stocks. Cette application est tout à fait adaptée pour un petit organisme avec des besoins assez simples. Elle a été pensé pour fonctionner avec un nombre raisonnable de produits, bien qu'il soit tout à fait possible de gèrer un large éventail de produits, il sera nécessaire de revoir l'affichage afin de rendre l'application plus ergonomique. 
+
+
+
+
+

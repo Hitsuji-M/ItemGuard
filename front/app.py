@@ -4,7 +4,6 @@ from datetime import datetime as dt
 import re
 import hashlib
 
-
 api_url = "http://api:5000"
 
 
@@ -49,22 +48,27 @@ def login_page() -> str:
     return token
 
 
+# On va ensuite créer une fonction par fonctionnalité. Chacune de ces fonctions prendra en paramètre un token. Ce token permet de confirmer
+# l'identité de l'utilisateur et sera donné dans la requête.
+
+
 #Page principale
 def main_page(token: str):
     st.title("ItemGuard")   
     st.sidebar.header("Navigation")
 
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get(f"{api_url}/user/me", headers=headers)
+    headers = {"Authorization": f"Bearer {token}"} # Création de header avec le token
+    response = requests.get(f"{api_url}/user/me", headers=headers) #Requête à l'API
     admin = False
+
+    # Requête pour savoir si l'utilisateur est admin ou pas
     if response.status_code == 200:
         user_data = response.json()
         admin = user_data["administrator"]
-        st.write(admin)
     else:
         st.error(f"Échec de la récupération du profil utilisateur. Code d'erreur : {response.status_code}, {response.reason}")
 
-    # Différents onglets possible
+    # Différents onglets possible, la différence entre admin et user se fait ici
     if admin:    
         selected_tab = st.sidebar.radio("Choisissez une action", ["Tous les produits", "Créer", "Supprimer", "Mettre à jour", "Logs", "Profil","Modifier Profil", "Déconnexion"])
         if selected_tab == "Créer":
@@ -118,6 +122,7 @@ def create(token):
     st.header("Create")
     types: dict[str, int] = get_product_types(token)
 
+    #On crée un formulaire avec plusieurs champs à remplir
     with st.form("create_product_form"):
         product_name = st.text_input("Nom du produit", key="product_name")
         if types: product_type = st.radio("Type de produit", options=types.keys())
@@ -125,8 +130,10 @@ def create(token):
         product_price = st.number_input("Prix du produit", key="product_price", min_value=0.0, max_value=999.0, step=0.5)
         submit_button = st.form_submit_button("Submit")
 
+    #Une fois que le bouton submit est utilisé
     if submit_button:
         
+        #Création du dictionnaire avec les informations du produit
         product_data = {
             "idType": types[product_type] if types else 0,
             "productName": product_name,
@@ -184,10 +191,10 @@ def update_product(token):
 
         types: dict[str, int] = get_product_types(token)
 
-       
+       # On sélectionne le produit qu'on veut modifier
         selected_product_name = st.selectbox("Choisir un produit à mettre à jour", [product["productname"] for product in product_data])
 
-        
+        #On récupère son id
         selected_product_id = next((product["idproduct"] for product in product_data if product["productname"] == selected_product_name), None)
 
         if selected_product_id is not None:
@@ -197,7 +204,7 @@ def update_product(token):
             if response.status_code == 200:
                 product_data = response.json()
 
-                
+                # Comme pour créer un produit on doit remplir un formulaire
                 with st.form("update_product_form"):
                     listed_types = []
                     idx = 0
@@ -242,9 +249,11 @@ def show_logs(token: str):
     
     selected_action = st.selectbox("Choisir une action", ["Tous les logs", "Rechercher", "Logs limités", "Supprimer"])
 
+    # Tous les logs
     if selected_action == "Tous les logs":
         logs = get_all_logs(token)
         st.write(logs)
+    #On cherche les logs avec une limite, une date et une direction
     elif selected_action == "Rechercher":
         limit = st.number_input("Limite", value=0)
         desc = st.checkbox("Tri décroissant", value=True)
@@ -252,10 +261,12 @@ def show_logs(token: str):
         before = dt.combine(before, dt.max.time()) if before else dt.now()
         logs = search_logs(limit, desc, before, token)
         st.write(logs)
+    #On cherche les logs selon une certaine limite
     elif selected_action == "Logs limités":
         limit = st.number_input("Limite", value=10)
         logs = get_logs_limit(limit, token)
         st.write(logs)
+    # On supprime un log spécifique
     elif selected_action == "Supprimer":
         log_id = st.number_input("ID du log à supprimer", value=0, min_value=0)
         if st.button("Supprimer"):
@@ -337,8 +348,8 @@ def update_profile_page(token: str):
             submit_button = st.form_submit_button("Mettre à jour le profil")
 
         if submit_button:
-            pattern = re.compile("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+")
-            if not pattern.match(new_email):
+            pattern = re.compile("([A-Za-z0-9]+[.-_])*[A-Za-z0-9]+@[A-Za-z0-9-]+(\.[A-Z|a-z]{2,})+") 
+            if not pattern.match(new_email):  #Vérification du bon format du mail
                 st.error("Incorrect email format")
                 return
 
@@ -347,11 +358,11 @@ def update_profile_page(token: str):
                 "passwd": hashed_password if hashed_password else user_data["passwd"],
                 "administrator": administrator,
             }
-
+            #On change les infos du profil
             response = requests.put(f"{api_url}/user/update", headers={"Authorization": f"Bearer {token}"}, json=updated_profile_data)
             if response.status_code == 200:
                 st.success("Profil mis à jour avec succès!")
-                st.session_state.is_authenticated = False
+                st.session_state.is_authenticated = False #On se déconnecte pour que l'utilisateur utilise sesnouveaux identifiants
                 st.session_state.page = 0
                 st.rerun()
             else:
@@ -359,7 +370,7 @@ def update_profile_page(token: str):
     else:
         st.error("Échec de la récupération du profil utilisateur.")
 
-
+# Déconnection de l'application
 def disconnect():
     st.session_state.is_authenticated = False
     st.session_state.page = 0

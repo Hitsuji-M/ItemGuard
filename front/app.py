@@ -45,6 +45,8 @@ def login_page() -> str:
             st.session_state.token = token
             nextpage()
             st.rerun()
+        else:
+            st.error("Identifiant ou mot de passe incorrecte")
     return token
 
 
@@ -145,7 +147,7 @@ def create(token):
 
         if response.status_code == 200:
             st.success("Produit créé avec succès!")
-            st.write(product_name, product_type, quantity_product, product_price)
+            st.write("Nom: ",product_name,"/ Type: ", product_type,"/ Quantité: ", quantity_product,"/ Prix: ", product_price)
         else:
             st.error("Échec de la création du produit.")
 

@@ -3,7 +3,7 @@
 ## Instructions d'installation
 
 Cloner le fichier dans un terminal:
-- `git clone https://git.esiee.fr/massone/itemguard`
+- `git clone https://github.com/Hitsuji-M/ItemGuard`
 - `cd ItemGuard`
 - `docker-compose up --build`
 
